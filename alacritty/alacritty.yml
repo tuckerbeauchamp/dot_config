@@ -1,0 +1,7 @@
+ font:
+  # The normal (roman) font face to use.
+  # Style can be specified to pick a specific face.
+  normal:
+    family: JetBrains Mono NF
+    style: Regular
+    # family: "Fifamily = "JetBrains Mono NF"
