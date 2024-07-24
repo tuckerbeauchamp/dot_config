@@ -20,18 +20,7 @@ return {
 			winbar = {
 				lualine_a = { { "filename", path = 4 }, "branch" },
 				lualine_b = {},
-				lualine_c = {
-					"%=",
-					{ "harpoon2", _separator = " " },
-					"%=",
-				},
-				lualine_x = {
-					{
-						"diagnostics",
-						sources = { "nvim_diagnostic" },
-						symbols = { error = " ", warn = " ", info = " ", hint = " " },
-					},
-				},
+				lualine_x = {},
 				lualine_y = {},
 				lualine_z = {},
 			},
