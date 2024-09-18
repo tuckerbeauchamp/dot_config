@@ -1,16 +1,3 @@
-local function filter_definitions(result)
-	if not result then
-		return
-	end
-	local filtered_result = {}
-	for _, item in ipairs(result) do
-		if item.targetUri and not item.targetUri:match("%.d%.ts$") then
-			table.insert(filtered_result, item)
-		end
-	end
-	return filtered_result
-end
-
 return {
 	{
 		"neovim/nvim-lspconfig",
@@ -49,6 +36,16 @@ return {
 
 				-- Probably want to disable formatting for this lang server
 				tsserver = {
+					init_options = {
+						preferences = {
+							includeInlayParameterNameHints = "all",
+							-- includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+							-- includeInlayFunctionParameterTypeHints = true,
+							-- includeInlayVariableTypeHints = true,
+							-- includeInlayPropertyDeclarationTypeHints = true,
+							-- includeInlayFunctionLikeReturnTypeHints = true,
+						},
+					},
 					filetypes = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
 				},
 
@@ -138,40 +135,6 @@ return {
 				},
 			})
 
-			-- working on ignoring .d.ts files
-			-- require("lspconfig").tsserver.setup({
-			-- 	on_attach = function(client, bufnr)
-			-- 		-- Disable "Go to Definition" for .d.ts files
-			-- 		client.handlers["textDocument/definition"] = function(err, result, ctx, config)
-			-- 			if err then
-			-- 				vim.notify(err.message, vim.log.levels.ERROR)
-			-- 				return nil
-			-- 			end
-			--
-			-- 			if not result or vim.tbl_isempty(result) then
-			-- 				vim.notify("No definitions found", vim.log.levels.INFO)
-			-- 				return nil
-			-- 			end
-			--
-			-- 			local filtered_result = filter_definitions(result)
-			-- 			if #filtered_result > 0 then
-			-- 				local item = filtered_result[1]
-			-- 				if item.targetUri then
-			-- 					local start_pos = item.targetRange or item.targetSelectionRange
-			-- 					if start_pos then
-			-- 						local row, col = start_pos.start.line, start_pos.start.character
-			-- 						vim.api.nvim_win_set_cursor(0, { row + 1, col })
-			-- 						vim.api.nvim_command("normal! zz")
-			-- 					end
-			-- 				end
-			-- 			else
-			-- 				vim.notify("No non-.d.ts definitions found", vim.log.levels.INFO)
-			-- 			end
-			-- 		end
-			-- 	end,
-			-- 	require("cmp_nvim_lsp").default_capabilities(),
-			-- })
-
 			vim.api.nvim_create_autocmd("BufWritePre", {
 				callback = function(args)
 					require("conform").format({
@@ -181,6 +144,23 @@ return {
 					})
 				end,
 			})
+			local inlay_hints_enabled = true
+
+			local function toggle_inlay_hints()
+				inlay_hints_enabled = not inlay_hints_enabled
+				for _, client in ipairs(vim.lsp.get_active_clients()) do
+					if client.server_capabilities.inlayHintProvider then
+						vim.lsp.inlay_hint.enable(0, inlay_hints_enabled)
+					end
+				end
+			end
+
+			vim.api.nvim_set_keymap(
+				"n",
+				"<leader>th",
+				":lua toggle_inlay_hints()<CR>",
+				{ noremap = true, silent = true }
+			)
 		end,
 	},
 }
