@@ -18,7 +18,7 @@ return {
 				lualine_z = { "location" },
 			},
 			winbar = {
-				lualine_a = { { "filename", path = 4 }, "branch" },
+				lualine_a = { { "filename", path = 1 }, "branch" },
 				lualine_b = {},
 				lualine_x = {},
 				lualine_y = {},

@@ -2,7 +2,6 @@ return {
 	{
 		"neovim/nvim-lspconfig",
 		dependencies = {
-			"folke/neodev.nvim",
 			"williamboman/mason.nvim",
 			"williamboman/mason-lspconfig.nvim",
 			"WhoIsSethDaniel/mason-tool-installer.nvim",
@@ -13,13 +12,6 @@ return {
 			"b0o/SchemaStore.nvim",
 		},
 		config = function()
-			require("neodev").setup({
-				-- library = {
-				--   plugins = { "nvim-dap-ui" },
-				--   types = true,
-				-- },
-			})
-
 			local capabilities = nil
 			if pcall(require, "cmp_nvim_lsp") then
 				capabilities = require("cmp_nvim_lsp").default_capabilities()
@@ -33,17 +25,34 @@ return {
 				rust_analyzer = true,
 				svelte = true,
 				cssls = true,
+				sqlls = {
+					filetypes = { "sql" },
+					connections = {
+						{
+							driver = "postgresql", -- or 'postgresql'
+							dataSourceName = "postgresadmin:admin123@tcp(localhost:5432)/sandbox-1",
+						},
+					},
+				},
 
-				-- Probably want to disable formatting for this lang server
-				tsserver = {
+				graphql = {
+					cmd = { "graphql-lsp", "server", "-m", "stream" },
+					filetypes = { "graphql", "javascript", "javascriptreact", "typescript", "typescriptreact" },
+					root_dir = require("lspconfig.util").root_pattern(
+						".graphqlrc",
+						".graphqlrc.yaml",
+						".graphqlrc.yml",
+						"graphql.config.js",
+						"graphql.config.yaml",
+						"graphql.config.yml"
+					),
+				},
+
+				ts_ls = {
 					init_options = {
 						preferences = {
+							importModuleSpecifierPreference = "relative",
 							includeInlayParameterNameHints = "all",
-							-- includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-							-- includeInlayFunctionParameterTypeHints = true,
-							-- includeInlayVariableTypeHints = true,
-							-- includeInlayPropertyDeclarationTypeHints = true,
-							-- includeInlayFunctionLikeReturnTypeHints = true,
 						},
 					},
 					filetypes = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
@@ -52,6 +61,7 @@ return {
 				jsonls = {
 					settings = {
 						json = {
+							trace = { server = "on" },
 							schemas = require("schemastore").json.schemas(),
 							validate = { enable = true },
 						},
@@ -119,6 +129,17 @@ return {
 
 					vim.keymap.set("n", "<space>cr", vim.lsp.buf.rename, { buffer = 0 })
 					vim.keymap.set("n", "<space>ca", vim.lsp.buf.code_action, { buffer = 0 })
+					vim.keymap.set("n", "<leader>ci", function()
+						vim.lsp.buf.code_action({
+							context = {
+								diagnostics = {},
+								only = {
+									"source.addMissingImports",
+								},
+							},
+							apply = true, -- This will apply the action automatically without showing the menu
+						})
+					end, { buffer = 0, desc = "Add All Missing Imports" })
 
 					local filetype = vim.bo[bufnr].filetype
 					if disable_semantic_tokens[filetype] then
@@ -144,6 +165,7 @@ return {
 					})
 				end,
 			})
+
 			local inlay_hints_enabled = true
 
 			local function toggle_inlay_hints()
